@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تقرير الانتقالات</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#1d2433;--muted:#6b7280;--line:#d9dde5;--accent:#0f766e;--accent-soft:#e0f2f1;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b212b;--text:#e8ebf0;--muted:#9aa3b2;--line:#2f3846;--accent:#2dd4bf;--accent-soft:#16332f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161d;--card:#1b212b;--text:#e8ebf0;--muted:#9aa3b2;--line:#2f3846;--accent:#2dd4bf;--accent-soft:#16332f;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.6}
+main{max-width:560px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+label{display:block;font-weight:600;margin-bottom:6px}
+input,textarea{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:200px;resize:vertical}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.date{display:flex;align-items:center;gap:8px}
+.date .val{flex:1;text-align:center;font-weight:700;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+button.nav{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:20px;cursor:pointer}
+.out{cursor:pointer;border:2px dashed var(--accent);background:var(--accent-soft);border-radius:12px;padding:12px;white-space:pre-wrap;word-break:break-word;min-height:48px}
+.out small{display:block;color:var(--muted);margin-bottom:4px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:8px 18px;border-radius:20px;opacity:0;transition:.2s;pointer-events:none}
+.toast.show{opacity:1}
+.top{display:flex;justify-content:flex-start;margin-bottom:10px}
+#theme{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:20px;padding:6px 14px;font:inherit;cursor:pointer}
+footer{text-align:center;color:var(--muted);font-size:.9rem;padding:14px 0 24px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><button id="theme" type="button"></button></div>
+  <div class="card">
+    <label>التاريخ</label>
+    <div class="date">
+      <button class="nav" id="next" title="اليوم التالي">‹</button>
+      <div class="val" id="dateTxt"></div>
+      <button class="nav" id="prev" title="اليوم السابق">›</button>
+    </div>
+  </div>
+  <div class="card row">
+    <div><label for="cust">العهدة</label><input id="cust" inputmode="decimal" placeholder="0"></div>
+    <div><label for="bal">الرصيد</label><input id="bal" inputmode="decimal" placeholder="0"></div>
+  </div>
+  <div class="card">
+    <label for="trips">الانتقالات</label>
+    <textarea id="trips" placeholder="8 الجيزة&#10;50 تذكرة&#10;..."></textarea>
+  </div>
+  <div class="card"><div class="out" id="o1" data-copy></div></div>
+  <div class="card"><div class="out" id="o2" data-copy></div></div>
+<footer>تم عمل هذه الصفحة بواسطة عبد الرحمن اشرف باستخدام الذكاء الاصطناعي ... أسألكم الدعاء لأمي</footer>
+</main>
+<div class="toast" id="toast">تم النسخ ✓</div>
+<script>
+const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const $=id=>document.getElementById(id);
+// التاريخ الافتراضي: قبل 6 صباحًا يُحسب اليوم السابق
+let d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1);
+d.setHours(12,0,0,0);
+const pad=n=>String(n).padStart(2,"0");
+const dateStr=()=>`${DAYS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+
+// توحيد الأرقام العربية والفارسية إلى إنجليزية
+function norm(s){
+  return s.replace(/[٠-٩]/g,c=>c.charCodeAt(0)-1632)
+          .replace(/[۰-۹]/g,c=>c.charCodeAt(0)-1776)
+          .replace(/٫/g,".");
+}
+// استخراج كل الأرقام (صحيحة أو عشرية) من أي مكان في النص وتجاهل الباقي
+function sumNums(text){
+  const m=norm(text).match(/\d+(?:\.\d+)?/g)||[];
+  const t=m.reduce((a,b)=>a+parseFloat(b),0);
+  return Math.round(t*1000)/1000;
+}
+function num(v){const x=parseFloat(norm(v||"").replace(/[^\d.\-]/g,""));return isNaN(x)?0:x}
+const r=x=>Math.round(x*1000)/1000;
+
+function render(){
+  $("dateTxt").textContent=dateStr();
+  const trips=$("trips").value;
+  const total=sumNums(trips);
+  const cust=num($("cust").value), bal=num($("bal").value);
+  const left=r(cust+bal-total);
+  const lines=trips.split("\n").map(l=>l.replace(/\s+$/,"")).filter(l=>l.trim());
+  $("o1").innerHTML="<small>مجموع الانتقالات (اضغط للنسخ)</small>"+"";
+  $("o1").dataset.text=String(total);
+  $("o1").append(document.createTextNode("مجموع الانتقالات: "+total));
+  const rep=`> ${dateStr()}\n\nالعهدة: ${r(cust)}\nالرصيد: ${r(bal)}\n\nالانتقالات:\n${lines.join("\n")}\n\nمجموع الانتقالات: ${total}\nالباقي: ${left}`;
+  $("o2").innerHTML="<small>التقرير الشامل (اضغط للنسخ)</small>";
+  $("o2").dataset.text=rep;
+  $("o2").append(document.createTextNode(rep));
+}
+$("prev").onclick=()=>{d.setDate(d.getDate()-1);render()};
+$("next").onclick=()=>{d.setDate(d.getDate()+1);render()};
+["cust","bal","trips"].forEach(i=>$(i).addEventListener("input",render));
+
+function toast(){const t=$("toast");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1200)}
+async function copy(text){
+  try{await navigator.clipboard.writeText(text)}
+  catch(e){const a=document.createElement("textarea");a.value=text;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(_){}a.remove()}
+  toast();
+}
+document.querySelectorAll("[data-copy]").forEach(el=>el.addEventListener("click",()=>copy(el.dataset.text||"")));
+render();
+// الوضع الليلي / النهاري
+const root=document.documentElement;
+const isDark=()=>root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+function paintBtn(){$('theme').textContent=isDark()?'☀️ نهاري':'🌙 ليلي'}
+try{const s=localStorage.getItem('theme');if(s)root.dataset.theme=s}catch(e){}
+$('theme').onclick=()=>{const n=isDark()?'light':'dark';root.dataset.theme=n;try{localStorage.setItem('theme',n)}catch(e){}paintBtn()};
+paintBtn();
+</script>
+</body>
+</html>
