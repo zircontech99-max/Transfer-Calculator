@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>تقرير الانتقالات</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b4aa5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="الانتقالات">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#1d2433;--muted:#6b7280;--line:#d9dde5;--accent:#0f766e;--accent-soft:#e0f2f1;--danger:#b42318;--danger-soft:#fdecea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b212b;--text:#e8ebf0;--muted:#9aa3b2;--line:#2f3846;--accent:#2dd4bf;--accent-soft:#16332f;--danger:#f97066;--danger-soft:#3a1d1b;color-scheme:dark}}
@@ -261,6 +268,7 @@ if(dr){
 $("toToday").onclick=()=>{d=nowDate();render();toast("تم تحديث التاريخ ✓")};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
 render();renderHist();paintBtn();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>
 </html>
