@@ -31,6 +31,7 @@ button.nav{width:44px;height:44px;border:1px solid var(--line);border-radius:10p
 .out small{display:block;color:var(--muted);margin-bottom:4px}
 .btn{font:inherit;font-weight:700;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 16px;cursor:pointer}
 .btn.primary{background:var(--accent);color:var(--card);width:100%}
+#clear{height:100%}
 .btn.danger{border-color:var(--danger);background:var(--danger-soft);color:var(--danger);width:100%}
 .btn.sm{padding:4px 12px;font-size:.9rem}
 .hist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
@@ -53,7 +54,7 @@ footer{text-align:center;color:var(--muted);font-size:.9rem;padding:14px 0 24px}
     <span class="lbl">التاريخ</span>
     <div class="date">
       <button class="nav" id="next" title="اليوم التالي">‹</button>
-      <div class="val" id="dateBox"><span id="dateTxt"></span><small>اضغط لتغيير التاريخ</small><input type="date" id="dateIn" aria-label="اختيار التاريخ"></div>
+      <div class="val" id="dateBox"><span id="dateTxt"></span><input type="date" id="dateIn" aria-label="اختيار التاريخ"></div>
       <button class="nav" id="prev" title="اليوم السابق">›</button>
     </div>
   </div>
@@ -70,7 +71,7 @@ footer{text-align:center;color:var(--muted);font-size:.9rem;padding:14px 0 24px}
   </div>
   <div class="card"><div class="out" id="o1" data-copy></div></div>
   <div class="card"><div class="out" id="o2" data-copy></div></div>
-  <div class="card"><button class="btn primary" id="save" type="button">حفظ في السجل</button></div>
+  <div class="card row"><div><button class="btn primary" id="save" type="button">حفظ</button></div><div><button class="btn" id="clear" type="button" style="width:100%">تفريغ الحقول</button></div></div>
   <div class="card">
     <h2>السجل (آخر 3 أيام)</h2>
     <ul class="hist" id="hist"></ul>
@@ -101,8 +102,8 @@ const store={
 };
 
 // التاريخ الافتراضي: قبل 6 صباحًا يُحسب اليوم السابق
-let d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1);
-d.setHours(12,0,0,0);
+function nowDate(){const x=new Date(); if(x.getHours()<6) x.setDate(x.getDate()-1); x.setHours(12,0,0,0); return x}
+let d=nowDate();
 const dateStr=()=>fmt(d);
 
 function norm(s){
@@ -185,7 +186,14 @@ $("save").onclick=()=>{
   list.unshift(item);
   list=list.slice(0,3);
   store.set("hist",list);
-  renderHist();toast("تم الحفظ ✓");
+  const left=r(num(item.cust)+num(item.bal)-sumNums(item.trips));
+  $("cust").value="";$("trips").value="";$("bal").value=left?String(left):"";
+  d=nowDate();
+  render();renderHist();toast("تم الحفظ ✓");
+};
+$("clear").onclick=()=>{
+  $("cust").value="";$("bal").value="";$("trips").value="";
+  d=nowDate();render();toast("تم تفريغ الحقول ✓");
 };
 
 // الوضع الليلي / النهاري
@@ -200,7 +208,7 @@ $("wipe").onclick=()=>{
   if(!confirm("سيتم مسح الحقول والسجل المحفوظ. هل أنت متأكد؟")) return;
   store.del("draft");store.del("hist");
   $("cust").value="";$("bal").value="";$("trips").value="";
-  d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); d.setHours(12,0,0,0);
+  d=nowDate();
   render();renderHist();toast("تم مسح البيانات ✓");
 };
 
@@ -214,5 +222,3 @@ render();renderHist();paintBtn();
 </script>
 </body>
 </html>
-
-// test
