@@ -23,10 +23,10 @@ textarea{min-height:200px;resize:vertical}
 .date .val small{display:block;color:var(--muted);font-weight:400;font-size:.78rem;line-height:1.2}
 .date .val input{position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;display:block;opacity:0;cursor:pointer;padding:0;border:0;margin:0;font-size:16px;-webkit-appearance:none;appearance:none}
 button.nav{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:20px;cursor:pointer}
-.lblrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.lblrow label{margin:0}
-.neg{border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);border-radius:8px;min-width:48px;height:36px;font-size:20px;touch-action:manipulation;font:inherit;font-weight:700;cursor:pointer;line-height:1}
-.neg.on{background:var(--accent);color:var(--card)}
+.fld{position:relative}
+.fld input{padding-inline-end:42px}
+.neg{position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:20px;line-height:1;cursor:pointer;touch-action:manipulation}
+.neg.on{color:var(--accent);background:var(--accent-soft)}
 .out{cursor:pointer;border:2px dashed var(--accent);background:var(--accent-soft);border-radius:12px;padding:12px;white-space:pre-wrap;word-break:break-word;min-height:48px}
 .out small{display:block;color:var(--muted);margin-bottom:4px}
 .btn{touch-action:manipulation;min-height:46px;font:inherit;font-weight:700;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 16px;cursor:pointer}
@@ -62,8 +62,8 @@ footer{text-align:center;color:var(--muted);font-size:.9rem;padding:14px 0 24px}
   <div class="card row">
     <div><label for="cust">العهدة</label><input id="cust" inputmode="decimal" placeholder="0"></div>
     <div>
-      <div class="lblrow"><label for="bal">الرصيد</label><button class="neg" id="neg" type="button" title="جعل القيمة سالبة">−</button></div>
-      <input id="bal" inputmode="decimal" placeholder="0">
+      <label for="bal">الرصيد</label>
+      <div class="fld"><input id="bal" inputmode="decimal" placeholder="0"><button class="neg" id="neg" type="button" title="جعل القيمة سالبة" aria-label="جعل القيمة سالبة">−</button></div>
     </div>
   </div>
   <div class="card">
